@@ -1,0 +1,529 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HS-Memory</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=DM+Sans:wght@400;500&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --amber: #FAC775;
+    --amber-mid: #BA7517;
+    --amber-dark: #633806;
+    --brown: #412402;
+    --bg: #fffdf7;
+    --card: #ffffff;
+    --text: #1a1a1a;
+    --text-muted: #666;
+    --border: #e8e0d0;
+    --green: #1D9E75;
+    --green-bg: #EAF3DE;
+    --red: #E24B4A;
+    --red-bg: #FCEBEB;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 420px;
+  }
+
+  .screen { display: none; flex-direction: column; align-items: center; gap: 1rem; }
+  .screen.active { display: flex; }
+
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-size: 2.4rem;
+    font-weight: 900;
+    text-align: center;
+    line-height: 1.1;
+    color: var(--text);
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    width: 100%;
+  }
+
+  input[type="password"],
+  input[type="text"] {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 1rem;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    margin-bottom: 0.75rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus { border-color: var(--amber-mid); }
+
+  .btn {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    background: var(--card);
+    color: var(--text);
+    transition: background 0.15s, transform 0.1s;
+  }
+  .btn:hover { background: #f5f0e8; }
+  .btn:active { transform: scale(0.98); }
+
+  .btn-primary {
+    background: var(--amber);
+    color: var(--brown);
+    border-color: var(--amber-mid);
+  }
+  .btn-primary:hover { background: var(--amber-mid); color: #fff; }
+
+  .btn-row { display: flex; gap: 10px; width: 100%; }
+  .btn-row .btn { flex: 1; }
+
+  .btn-yes { background: var(--green-bg); color: var(--green); border-color: var(--green); }
+  .btn-yes:hover { background: var(--green); color: #fff; }
+
+  .btn-no { background: var(--red-bg); color: var(--red); border-color: var(--red); }
+  .btn-no:hover { background: var(--red); color: #fff; }
+
+  .err {
+    color: var(--red);
+    font-size: 0.82rem;
+    text-align: center;
+    min-height: 1.2em;
+  }
+
+  .beer-row {
+    display: flex;
+    gap: 0.5rem;
+    font-size: 2rem;
+    justify-content: center;
+  }
+  .beer { transition: all 0.3s; }
+  .beer.lost { opacity: 0.15; transform: scale(0.8); }
+
+  .img-card {
+    width: 100%;
+    aspect-ratio: 4/3;
+    background: #f5f0e8;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .img-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .img-loading {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 4px;
+    background: #e8e0d0;
+    border-radius: 2px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--amber-mid);
+    border-radius: 2px;
+    transition: width 0.4s;
+  }
+
+  .counter {
+    font-size: 13px;
+    color: var(--text-muted);
+    background: #f5f0e8;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+  }
+
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+  }
+
+  .feedback-box {
+    width: 100%;
+    padding: 1rem;
+    border-radius: 12px;
+    text-align: center;
+    font-weight: 500;
+    font-size: 1.1rem;
+  }
+  .feedback-box.correct { background: var(--green-bg); color: var(--green); }
+  .feedback-box.wrong { background: var(--red-bg); color: var(--red); }
+  .feedback-sub { font-size: 0.82rem; font-weight: 400; margin-top: 0.25rem; }
+
+  .score-row {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+  }
+  .score-card {
+    flex: 1;
+    background: #f5f0e8;
+    border-radius: 10px;
+    padding: 0.75rem;
+    text-align: center;
+  }
+  .score-val { font-size: 1.4rem; font-weight: 500; }
+  .score-lbl { font-size: 11px; color: var(--text-muted); }
+
+  .result-emoji { font-size: 4rem; text-align: center; }
+
+  .spinner {
+    width: 32px; height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--amber-mid);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- LOGIN -->
+  <div class="screen active" id="screen-login">
+    <div style="font-size:3.5rem;margin-top:1rem">🍺</div>
+    <h1>HS-Memory</h1>
+    <p class="subtitle">Nur för wahre Söffer!</p>
+    <div class="card" style="margin-top:0.5rem">
+      <input type="password" id="pw-input" placeholder="Passwort" onkeydown="if(event.key==='Enter')checkPw()" />
+      <div class="err" id="pw-err"></div>
+      <button class="btn btn-primary" onclick="checkPw()" style="margin-top:0.25rem">Erin komme →</button>
+    </div>
+  </div>
+
+  <!-- NAME -->
+  <div class="screen" id="screen-name">
+    <div style="font-size:3rem;margin-top:1rem">👋</div>
+    <h1>Wie heißt du?</h1>
+    <p class="subtitle">Damit dein Spielstand gespeichert wird.</p>
+    <div class="card">
+      <input type="text" id="name-input" placeholder="Dein Name" onkeydown="if(event.key==='Enter')startGame()" />
+      <div class="err" id="name-err"></div>
+      <button class="btn btn-primary" onclick="startGame()">Lass mal richtig saufen jetzt, du Keko! 🍺</button>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div class="screen" id="screen-loading">
+    <div style="font-size:3rem;margin-top:2rem">🍺</div>
+    <p style="color:var(--text-muted)">Bilder werden geladen...</p>
+    <div class="spinner"></div>
+  </div>
+
+  <!-- GAME -->
+  <div class="screen" id="screen-game">
+    <div class="top-bar">
+      <div class="beer-row" id="lives" style="font-size:1.8rem;gap:0.4rem"></div>
+      <div class="counter" id="img-counter"></div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    <div class="img-card" id="game-img">
+      <span class="img-loading">Bild wird geladen...</span>
+    </div>
+    <div id="question-area" style="width:100%">
+      <p style="font-size:0.9rem;color:var(--text-muted);text-align:center;margin-bottom:0.75rem">Häste dat Bild scho jesehe?</p>
+      <div class="btn-row">
+        <button class="btn btn-yes" onclick="answer(true)">Jo, dat kenn ich! 👁️</button>
+        <button class="btn btn-no" onclick="answer(false)">Noch nie jesenn! 🆕</button>
+      </div>
+    </div>
+    <div id="feedback-area" style="display:none;width:100%">
+      <div class="feedback-box" id="feedback-box">
+        <div id="feedback-text"></div>
+        <div class="feedback-sub" id="feedback-sub"></div>
+      </div>
+      <button class="btn btn-primary" style="margin-top:0.75rem" onclick="nextImage()">Nächstes Bild →</button>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="screen" id="screen-result">
+    <div class="result-emoji" id="result-emoji" style="margin-top:1rem"></div>
+    <h1 id="result-title"></h1>
+    <p class="subtitle" id="result-sub"></p>
+    <div class="score-row">
+      <div class="score-card"><div class="score-val" id="res-correct"></div><div class="score-lbl">Richtig</div></div>
+      <div class="score-card"><div class="score-val" id="res-wrong"></div><div class="score-lbl">Falsch</div></div>
+      <div class="score-card"><div class="score-val" id="res-lives"></div><div class="score-lbl">Leben übrig</div></div>
+    </div>
+    <button class="btn btn-primary" onclick="resetToName()" style="margin-top:0.5rem">Nochmal spielen! 🔄</button>
+  </div>
+
+</div>
+
+<script>
+const SUPABASE_URL = 'https://jcjgyqpsbayxxsbqgpiz.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_eD7mNkWYJjyhtVsuHXZTnQ_AbxhZjUl';
+const PASSWORD = 'derHStrinktzuvielKölsch95';
+const BUCKET = 'photos';
+
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let state = {
+  playerName: '',
+  lives: 3,
+  allImages: [],
+  queue: [],
+  seen: [],
+  current: null,
+  correct: 0,
+  wrong: 0,
+  answered: false,
+  sessionId: null,
+  questionIndex: 0,
+  totalQuestions: 0,
+};
+
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function checkPw() {
+  const val = document.getElementById('pw-input').value;
+  if (val === PASSWORD) {
+    document.getElementById('pw-err').textContent = '';
+    show('screen-name');
+  } else {
+    document.getElementById('pw-err').textContent = 'Falsches Passwort du Sürther Schmutz';
+  }
+}
+
+async function startGame() {
+  const name = document.getElementById('name-input').value.trim();
+  if (!name) {
+    document.getElementById('name-err').textContent = 'Gib bitte deinen Namen ein!';
+    return;
+  }
+  state.playerName = name;
+  document.getElementById('name-err').textContent = '';
+  show('screen-loading');
+
+  try {
+    const { data, error } = await db.storage.from(BUCKET).list('', { limit: 200 });
+    if (error) throw error;
+
+    const images = data.filter(f => f.name.match(/\.(jpg|jpeg|png|gif|webp)$/i));
+    if (images.length === 0) {
+      alert('Keine Bilder im Storage gefunden! Bitte lade zuerst Fotos in den "photos" Bucket hoch.');
+      show('screen-name');
+      return;
+    }
+
+    const shuffled = shuffle([...images]);
+    state.allImages = shuffled;
+    state.seen = [];
+    state.lives = 3;
+    state.correct = 0;
+    state.wrong = 0;
+    state.answered = false;
+    state.current = null;
+    state.questionIndex = 0;
+
+    // Build question queue: 200–350 questions from ~100 images
+    // First 3 are always new images, rest mix new + repeats
+    const n = shuffled.length;
+    const target = Math.floor(Math.random() * 151) + 200; // 200–350
+    const queue = [];
+    let newIdx = 0;
+    const seenSoFar = [];
+
+    for (let i = 0; i < target; i++) {
+      const forceNew = i < 3 || newIdx >= n;
+      const canRepeat = seenSoFar.length > 0 && !forceNew;
+      const useRepeat = canRepeat && Math.random() < 0.55;
+
+      if (useRepeat) {
+        const pick = seenSoFar[Math.floor(Math.random() * seenSoFar.length)];
+        queue.push({ img: pick, isRepeat: true });
+      } else {
+        if (newIdx >= n) break;
+        const pick = shuffled[newIdx++];
+        seenSoFar.push(pick);
+        queue.push({ img: pick, isRepeat: false });
+      }
+    }
+    state.queue = queue;
+    state.totalQuestions = queue.length;
+
+    const { data: session } = await db.from('game_sessions').insert({
+      player_name: name,
+      lives_left: 3,
+      correct: 0,
+      wrong: 0,
+      finished: false,
+    }).select().single();
+    if (session) state.sessionId = session.id;
+
+    renderLives();
+    show('screen-game');
+    loadNext();
+  } catch (e) {
+    alert('Fehler beim Laden: ' + e.message);
+    show('screen-name');
+  }
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function renderLives() {
+  document.getElementById('lives').innerHTML =
+    [0,1,2].map(i => `<span class="beer ${i >= state.lives ? 'lost' : ''}">🍺</span>`).join('');
+}
+
+async function loadNext() {
+  if (state.questionIndex >= state.queue.length) { endGame(true); return; }
+
+  document.getElementById('question-area').style.display = 'block';
+  document.getElementById('feedback-area').style.display = 'none';
+  state.answered = false;
+
+  const { img, isRepeat } = state.queue[state.questionIndex];
+  state.current = { img, isRepeat };
+
+  const done = state.questionIndex + 1;
+  const total = state.totalQuestions;
+  document.getElementById('img-counter').textContent = `${done} / ${total}`;
+  document.getElementById('progress-fill').style.width = `${(done / total) * 100}%`;
+
+  const imgEl = document.getElementById('game-img');
+  imgEl.innerHTML = '<span class="img-loading">⏳</span>';
+
+  const { data } = db.storage.from(BUCKET).getPublicUrl(img.name);
+  const url = data.publicUrl;
+
+  const image = new Image();
+  image.onload = () => { imgEl.innerHTML = ''; imgEl.appendChild(image); };
+  image.onerror = () => { imgEl.innerHTML = '<span class="img-loading">Bild nicht ladbar</span>'; };
+  image.src = url;
+  image.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+}
+
+function answer(saidYes) {
+  if (state.answered) return;
+  state.answered = true;
+
+  const { img, isRepeat } = state.current;
+  const correct = saidYes === isRepeat;
+
+  const fb = document.getElementById('feedback-box');
+  const ft = document.getElementById('feedback-text');
+  const fs = document.getElementById('feedback-sub');
+
+  if (correct) {
+    state.correct++;
+    fb.className = 'feedback-box correct';
+    ft.textContent = '✅ Richtig!';
+    fs.textContent = isRepeat
+      ? `Ja, "${img.name}" hattes du schon gesehen!`
+      : `Genau – das Bild ist neu für dich!`;
+    if (!isRepeat) state.seen.push(img);
+  } else {
+    state.wrong++;
+    state.lives--;
+    fb.className = 'feedback-box wrong';
+    ft.textContent = '❌ Falsch – du HUUURENSOHN';
+    fs.textContent = isRepeat
+      ? `Das Bild hattest du schon gesehen!`
+      : `Das Bild war noch neu für dich!`;
+    if (!isRepeat) state.seen.push(img);
+    renderLives();
+    if (state.lives <= 0) {
+      saveSession(false);
+      state.questionIndex++;
+      setTimeout(() => endGame(false), 900);
+      document.getElementById('question-area').style.display = 'none';
+      document.getElementById('feedback-area').style.display = 'block';
+      document.querySelector('#feedback-area .btn').style.display = 'none';
+      return;
+    }
+  }
+
+  document.getElementById('question-area').style.display = 'none';
+  document.getElementById('feedback-area').style.display = 'block';
+  document.querySelector('#feedback-area .btn').style.display = 'block';
+}
+
+function nextImage() { state.questionIndex++; loadNext(); }
+
+async function saveSession(won) {
+  if (!state.sessionId) return;
+  await db.from('game_sessions').update({
+    lives_left: state.lives,
+    correct: state.correct,
+    wrong: state.wrong,
+    finished: true,
+  }).eq('id', state.sessionId);
+}
+
+function endGame(won) {
+  saveSession(won);
+  document.getElementById('result-emoji').textContent = won ? '🎉' : '😢';
+  document.getElementById('result-title').textContent = won ? 'Jewonne!' : 'Spiel vorbei!';
+  document.getElementById('result-sub').textContent = won
+    ? `Super gemacht, ${state.playerName}! Alle Bilder erkannt!`
+    : `Alle Leeven verspielt, ${state.playerName}!`;
+  document.getElementById('res-correct').textContent = state.correct;
+  document.getElementById('res-wrong').textContent = state.wrong;
+  document.getElementById('res-lives').textContent = state.lives + ' 🍺';
+  show('screen-result');
+}
+
+function resetToName() { show('screen-name'); }
+</script>
+</body>
+</html>
