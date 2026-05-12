@@ -3,18 +3,17 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>HS-Memory</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=DM+Sans:wght@400;500&display=swap');
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
   :root {
     --amber: #FAC775;
     --amber-mid: #BA7517;
-    --amber-dark: #633806;
     --brown: #412402;
     --bg: #fffdf7;
     --card: #ffffff;
@@ -27,200 +26,193 @@
     --red-bg: #FCEBEB;
   }
 
+  html, body { height: 100%; overflow-x: hidden; }
+
   body {
     font-family: 'DM Sans', sans-serif;
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
-    padding: 1rem;
+    padding: 1.25rem 1rem 2rem;
   }
 
-  .app {
-    width: 100%;
-    max-width: 420px;
-  }
+  .app { width: 100%; max-width: 480px; }
 
-  .screen { display: none; flex-direction: column; align-items: center; gap: 1rem; }
+  .screen { display: none; flex-direction: column; align-items: center; gap: 1.1rem; }
   .screen.active { display: flex; }
 
   h1 {
     font-family: 'Fraunces', serif;
-    font-size: 2.4rem;
+    font-size: 2.6rem;
     font-weight: 900;
     text-align: center;
     line-height: 1.1;
     color: var(--text);
   }
 
-  .subtitle {
-    font-size: 0.9rem;
-    color: var(--text-muted);
-    text-align: center;
-  }
+  .subtitle { font-size: 1rem; color: var(--text-muted); text-align: center; }
 
   .card {
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: 16px;
+    border-radius: 18px;
     padding: 1.5rem;
     width: 100%;
   }
 
-  input[type="password"],
-  input[type="text"] {
+  input[type="password"], input[type="text"] {
     width: 100%;
-    padding: 0.75rem 1rem;
+    padding: 0.9rem 1rem;
     border: 1px solid var(--border);
-    border-radius: 10px;
-    font-size: 1rem;
+    border-radius: 12px;
+    font-size: 1.1rem;
     font-family: 'DM Sans', sans-serif;
     background: var(--bg);
     color: var(--text);
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.85rem;
     outline: none;
     transition: border-color 0.2s;
+    -webkit-appearance: none;
   }
   input:focus { border-color: var(--amber-mid); }
 
   .btn {
     width: 100%;
-    padding: 0.8rem 1rem;
-    border-radius: 10px;
+    padding: 1rem;
+    border-radius: 12px;
     border: 1px solid var(--border);
     font-family: 'DM Sans', sans-serif;
-    font-size: 1rem;
+    font-size: 1.05rem;
     font-weight: 500;
     cursor: pointer;
     background: var(--card);
     color: var(--text);
     transition: background 0.15s, transform 0.1s;
+    touch-action: manipulation;
   }
-  .btn:hover { background: #f5f0e8; }
-  .btn:active { transform: scale(0.98); }
+  .btn:active { transform: scale(0.97); }
 
-  .btn-primary {
-    background: var(--amber);
-    color: var(--brown);
-    border-color: var(--amber-mid);
-  }
-  .btn-primary:hover { background: var(--amber-mid); color: #fff; }
+  .btn-primary { background: var(--amber); color: var(--brown); border-color: var(--amber-mid); }
+  .btn-primary:active { background: var(--amber-mid); color: #fff; }
 
   .btn-row { display: flex; gap: 10px; width: 100%; }
-  .btn-row .btn { flex: 1; }
+  .btn-row .btn { flex: 1; padding: 1.1rem 0.4rem; font-size: 0.95rem; }
 
   .btn-yes { background: var(--green-bg); color: var(--green); border-color: var(--green); }
-  .btn-yes:hover { background: var(--green); color: #fff; }
+  .btn-yes:active { background: var(--green); color: #fff; }
 
   .btn-no { background: var(--red-bg); color: var(--red); border-color: var(--red); }
-  .btn-no:hover { background: var(--red); color: #fff; }
+  .btn-no:active { background: var(--red); color: #fff; }
 
-  .err {
-    color: var(--red);
-    font-size: 0.82rem;
-    text-align: center;
-    min-height: 1.2em;
+  .btn-reset {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    padding: 0.4rem 0.5rem;
+    width: auto;
+    cursor: pointer;
+    touch-action: manipulation;
+    font-family: 'DM Sans', sans-serif;
   }
 
-  .beer-row {
-    display: flex;
-    gap: 0.5rem;
-    font-size: 2rem;
-    justify-content: center;
-  }
+  .err { color: var(--red); font-size: 0.85rem; text-align: center; min-height: 1.2em; }
+
+  .beer-row { display: flex; gap: 0.4rem; font-size: 2rem; }
   .beer { transition: all 0.3s; }
   .beer.lost { opacity: 0.15; transform: scale(0.8); }
 
-  .img-card {
-    width: 100%;
-    aspect-ratio: 4/3;
-    background: #f5f0e8;
-    border-radius: 14px;
-    border: 1px solid var(--border);
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-  }
-  .img-card img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  .img-loading {
-    font-size: 0.9rem;
-    color: var(--text-muted);
-  }
-
-  .progress-bar {
-    width: 100%;
-    height: 4px;
-    background: #e8e0d0;
-    border-radius: 2px;
-  }
-  .progress-fill {
-    height: 100%;
-    background: var(--amber-mid);
-    border-radius: 2px;
-    transition: width 0.4s;
-  }
+  .top-bar { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+  .top-right { display: flex; align-items: center; gap: 6px; }
 
   .counter {
     font-size: 13px;
     color: var(--text-muted);
     background: #f5f0e8;
-    padding: 4px 12px;
+    padding: 5px 12px;
     border-radius: 20px;
     border: 1px solid var(--border);
+    white-space: nowrap;
   }
 
-  .top-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  .img-card {
     width: 100%;
+    min-height: 200px;
+    background: #f5f0e8;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
+  .img-card img {
+    width: 100%;
+    height: auto;
+    display: block;
+    max-height: 65vw;
+    object-fit: contain;
+  }
+  .img-loading { font-size: 0.95rem; color: var(--text-muted); }
+
+  .progress-bar { width: 100%; height: 5px; background: #e8e0d0; border-radius: 3px; }
+  .progress-fill { height: 100%; background: var(--amber-mid); border-radius: 3px; transition: width 0.4s; }
+
+  .question-label { font-size: 1rem; color: var(--text-muted); text-align: center; margin-bottom: 0.75rem; }
 
   .feedback-box {
     width: 100%;
-    padding: 1rem;
-    border-radius: 12px;
+    padding: 1.1rem;
+    border-radius: 14px;
     text-align: center;
     font-weight: 500;
-    font-size: 1.1rem;
+    font-size: 1.15rem;
   }
   .feedback-box.correct { background: var(--green-bg); color: var(--green); }
   .feedback-box.wrong { background: var(--red-bg); color: var(--red); }
-  .feedback-sub { font-size: 0.82rem; font-weight: 400; margin-top: 0.25rem; }
+  .feedback-sub { font-size: 0.85rem; font-weight: 400; margin-top: 0.3rem; }
 
-  .score-row {
-    display: flex;
-    gap: 8px;
-    width: 100%;
-  }
-  .score-card {
-    flex: 1;
-    background: #f5f0e8;
-    border-radius: 10px;
-    padding: 0.75rem;
-    text-align: center;
-  }
-  .score-val { font-size: 1.4rem; font-weight: 500; }
-  .score-lbl { font-size: 11px; color: var(--text-muted); }
+  .score-row { display: flex; gap: 10px; width: 100%; }
+  .score-card { flex: 1; background: #f5f0e8; border-radius: 12px; padding: 0.85rem; text-align: center; }
+  .score-val { font-size: 1.6rem; font-weight: 500; }
+  .score-lbl { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
 
-  .result-emoji { font-size: 4rem; text-align: center; }
+  .result-emoji { font-size: 4.5rem; text-align: center; }
 
   .spinner {
-    width: 32px; height: 32px;
+    width: 36px; height: 36px;
     border: 3px solid var(--border);
     border-top-color: var(--amber-mid);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+  }
+  .overlay.active { display: flex; }
+  .overlay-box {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 1.75rem 1.5rem;
+    width: 100%;
+    max-width: 340px;
+    text-align: center;
+  }
+  .overlay-box h2 { font-family: 'Fraunces', serif; font-size: 1.5rem; margin-bottom: 0.5rem; }
+  .overlay-box p { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.25rem; }
+  .overlay-btns { display: flex; gap: 10px; }
 </style>
 </head>
 <body>
@@ -228,11 +220,11 @@
 
   <!-- LOGIN -->
   <div class="screen active" id="screen-login">
-    <div style="font-size:3.5rem;margin-top:1rem">🍺</div>
+    <div style="font-size:3.5rem;margin-top:1.5rem">🍺</div>
     <h1>HS-Memory</h1>
     <p class="subtitle">Nur för wahre Söffer!</p>
     <div class="card" style="margin-top:0.5rem">
-      <input type="password" id="pw-input" placeholder="Passwort" onkeydown="if(event.key==='Enter')checkPw()" />
+      <input type="password" id="pw-input" placeholder="Passwort" onkeydown="if(event.key==='Enter')checkPw()" autocomplete="current-password" />
       <div class="err" id="pw-err"></div>
       <button class="btn btn-primary" onclick="checkPw()" style="margin-top:0.25rem">Erin komme →</button>
     </div>
@@ -240,11 +232,11 @@
 
   <!-- NAME -->
   <div class="screen" id="screen-name">
-    <div style="font-size:3rem;margin-top:1rem">👋</div>
+    <div style="font-size:3rem;margin-top:1.5rem">👋</div>
     <h1>Wie heißt du?</h1>
     <p class="subtitle">Damit dein Spielstand gespeichert wird.</p>
     <div class="card">
-      <input type="text" id="name-input" placeholder="Dein Name" onkeydown="if(event.key==='Enter')startGame()" />
+      <input type="text" id="name-input" placeholder="Dein Name" onkeydown="if(event.key==='Enter')startGame()" autocomplete="nickname" />
       <div class="err" id="name-err"></div>
       <button class="btn btn-primary" onclick="startGame()">Lass mal richtig saufen jetzt, du Keko! 🍺</button>
     </div>
@@ -252,23 +244,26 @@
 
   <!-- LOADING -->
   <div class="screen" id="screen-loading">
-    <div style="font-size:3rem;margin-top:2rem">🍺</div>
-    <p style="color:var(--text-muted)">Bilder werden geladen...</p>
+    <div style="font-size:3rem;margin-top:3rem">🍺</div>
+    <p style="color:var(--text-muted);font-size:1rem">Bilder werden geladen...</p>
     <div class="spinner"></div>
   </div>
 
   <!-- GAME -->
   <div class="screen" id="screen-game">
     <div class="top-bar">
-      <div class="beer-row" id="lives" style="font-size:1.8rem;gap:0.4rem"></div>
-      <div class="counter" id="img-counter"></div>
+      <div class="beer-row" id="lives"></div>
+      <div class="top-right">
+        <div class="counter" id="img-counter"></div>
+        <button class="btn-reset" onclick="confirmReset()">↩ Reset</button>
+      </div>
     </div>
     <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
     <div class="img-card" id="game-img">
       <span class="img-loading">Bild wird geladen...</span>
     </div>
     <div id="question-area" style="width:100%">
-      <p style="font-size:0.9rem;color:var(--text-muted);text-align:center;margin-bottom:0.75rem">Häste dat Bild scho jesehe?</p>
+      <p class="question-label">Häste dat Bild scho jesehe?</p>
       <div class="btn-row">
         <button class="btn btn-yes" onclick="answer(true)">Jo, dat kenn ich! 👁️</button>
         <button class="btn btn-no" onclick="answer(false)">Noch nie jesenn! 🆕</button>
@@ -279,13 +274,13 @@
         <div id="feedback-text"></div>
         <div class="feedback-sub" id="feedback-sub"></div>
       </div>
-      <button class="btn btn-primary" style="margin-top:0.75rem" onclick="nextImage()">Nächstes Bild →</button>
+      <button class="btn btn-primary" style="margin-top:0.85rem" onclick="nextImage()">Nächstes Bild →</button>
     </div>
   </div>
 
   <!-- RESULT -->
   <div class="screen" id="screen-result">
-    <div class="result-emoji" id="result-emoji" style="margin-top:1rem"></div>
+    <div class="result-emoji" id="result-emoji" style="margin-top:1.5rem"></div>
     <h1 id="result-title"></h1>
     <p class="subtitle" id="result-sub"></p>
     <div class="score-row">
@@ -296,6 +291,18 @@
     <button class="btn btn-primary" onclick="resetToName()" style="margin-top:0.5rem">Nochmal spielen! 🔄</button>
   </div>
 
+</div>
+
+<!-- RESET BESTÄTIGUNG -->
+<div class="overlay" id="reset-overlay">
+  <div class="overlay-box">
+    <h2>Wirklich neu starten?</h2>
+    <p>Dein aktueller Spielstand geht verloren!</p>
+    <div class="overlay-btns">
+      <button class="btn" onclick="closeReset()" style="flex:1">Abbrechen</button>
+      <button class="btn btn-primary" onclick="doReset()" style="flex:1">Ja, neu!</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -348,12 +355,12 @@ async function startGame() {
   show('screen-loading');
 
   try {
-    const { data, error } = await db.storage.from(BUCKET).list('', { limit: 200 });
+    const { data, error } = await db.storage.from(BUCKET).list('', { limit: 300 });
     if (error) throw error;
 
     const images = data.filter(f => f.name.match(/\.(jpg|jpeg|png|gif|webp)$/i));
     if (images.length === 0) {
-      alert('Keine Bilder im Storage gefunden! Bitte lade zuerst Fotos in den "photos" Bucket hoch.');
+      alert('Keine Bilder im Storage gefunden!');
       show('screen-name');
       return;
     }
@@ -368,27 +375,40 @@ async function startGame() {
     state.current = null;
     state.questionIndex = 0;
 
-    // Build question queue: 200–350 questions from ~100 images
-    // First 3 are always new images, rest mix new + repeats
     const n = shuffled.length;
-    const target = Math.floor(Math.random() * 151) + 200; // 200–350
+    const TARGET = 250;
     const queue = [];
     let newIdx = 0;
     const seenSoFar = [];
 
-    for (let i = 0; i < target; i++) {
+    for (let i = 0; i < TARGET; i++) {
       const forceNew = i < 3 || newIdx >= n;
-      const canRepeat = seenSoFar.length > 0 && !forceNew;
+      const canRepeat = seenSoFar.length > 1 && !forceNew;
       const useRepeat = canRepeat && Math.random() < 0.55;
+      const lastImg = queue.length > 0 ? queue[queue.length - 1].img : null;
 
       if (useRepeat) {
-        const pick = seenSoFar[Math.floor(Math.random() * seenSoFar.length)];
-        queue.push({ img: pick, isRepeat: true });
+        const candidates = seenSoFar.filter(img => img !== lastImg);
+        if (candidates.length === 0) {
+          if (newIdx >= n) break;
+          const pick = shuffled[newIdx++];
+          seenSoFar.push(pick);
+          queue.push({ img: pick, isRepeat: false });
+        } else {
+          const pick = candidates[Math.floor(Math.random() * candidates.length)];
+          queue.push({ img: pick, isRepeat: true });
+        }
       } else {
-        if (newIdx >= n) break;
-        const pick = shuffled[newIdx++];
-        seenSoFar.push(pick);
-        queue.push({ img: pick, isRepeat: false });
+        if (newIdx >= n) {
+          const candidates = seenSoFar.filter(img => img !== lastImg);
+          if (candidates.length === 0) break;
+          const pick = candidates[Math.floor(Math.random() * candidates.length)];
+          queue.push({ img: pick, isRepeat: true });
+        } else {
+          const pick = shuffled[newIdx++];
+          seenSoFar.push(pick);
+          queue.push({ img: pick, isRepeat: false });
+        }
       }
     }
     state.queue = queue;
@@ -450,7 +470,7 @@ async function loadNext() {
   image.onload = () => { imgEl.innerHTML = ''; imgEl.appendChild(image); };
   image.onerror = () => { imgEl.innerHTML = '<span class="img-loading">Bild nicht ladbar</span>'; };
   image.src = url;
-  image.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+  image.style.cssText = 'width:100%;height:auto;max-height:65vw;object-fit:contain;display:block;';
 }
 
 function answer(saidYes) {
@@ -468,27 +488,23 @@ function answer(saidYes) {
     state.correct++;
     fb.className = 'feedback-box correct';
     ft.textContent = '✅ Richtig!';
-    fs.textContent = isRepeat
-      ? `Ja, "${img.name}" hattes du schon gesehen!`
-      : `Genau – das Bild ist neu für dich!`;
+    fs.textContent = isRepeat ? 'Ja, dat Bild hattes du schon jesehen!' : 'Genau – dat Bild is neu für dich!';
     if (!isRepeat) state.seen.push(img);
   } else {
     state.wrong++;
     state.lives--;
     fb.className = 'feedback-box wrong';
     ft.textContent = '❌ Falsch – du HUUURENSOHN';
-    fs.textContent = isRepeat
-      ? `Das Bild hattest du schon gesehen!`
-      : `Das Bild war noch neu für dich!`;
+    fs.textContent = isRepeat ? 'Dat Bild hattest du schon jesehen!' : 'Dat Bild war noch neu für dich!';
     if (!isRepeat) state.seen.push(img);
     renderLives();
     if (state.lives <= 0) {
       saveSession(false);
       state.questionIndex++;
-      setTimeout(() => endGame(false), 900);
       document.getElementById('question-area').style.display = 'none';
       document.getElementById('feedback-area').style.display = 'block';
       document.querySelector('#feedback-area .btn').style.display = 'none';
+      setTimeout(() => endGame(false), 1200);
       return;
     }
   }
@@ -524,6 +540,9 @@ function endGame(won) {
 }
 
 function resetToName() { show('screen-name'); }
+function confirmReset() { document.getElementById('reset-overlay').classList.add('active'); }
+function closeReset() { document.getElementById('reset-overlay').classList.remove('active'); }
+function doReset() { closeReset(); show('screen-name'); }
 </script>
 </body>
 </html>
